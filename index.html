@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,8 +10,25 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
-  <!-- Neural Network Canvas Background -->
-  <canvas id="neural-bg"></canvas>
+  <!-- Page Loader -->
+  <div class="page-loader" id="page-loader">
+    <div class="loader-inner">
+      <div class="loader-logo">
+        <span class="logo-bracket">&lt;</span>SP<span class="logo-bracket">/&gt;</span>
+      </div>
+      <div class="loader-bar"><div class="loader-bar-fill"></div></div>
+      <p class="loader-text">Initializing neural networks...</p>
+    </div>
+  </div>
+
+  <!-- 3D Neural Network Background (Three.js) -->
+  <div id="neural-3d"></div>
+
+  <!-- Theme Toggle (fixed) -->
+  <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+    <svg class="theme-icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+    <svg class="theme-icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  </button>
 
   <!-- Navigation -->
   <nav class="nav" id="nav">
@@ -41,8 +58,8 @@
 
   <!-- Hero Section -->
   <section class="hero" id="hero">
-    <div class="hero-content">
-      <div class="hero-badge">
+    <div class="hero-content reveal-hero">
+      <div class="hero-badge reveal-item" style="--delay:0.1s">
         <span class="status-dot"></span>
         Currently building the future of search at
         <svg class="perplexity-logo" viewBox="0 0 200 200" width="18" height="18">
@@ -51,22 +68,22 @@
         <span class="perplexity-text">Perplexity AI</span>
       </div>
       <h1 class="hero-title">
-        <span class="hero-line">Siraj</span>
-        <span class="hero-line gradient-text">Patnam</span>
+        <span class="hero-line reveal-item" style="--delay:0.2s">Siraj</span>
+        <span class="hero-line gradient-text reveal-item" style="--delay:0.35s">Patnam</span>
       </h1>
-      <p class="hero-subtitle">AI/ML Engineer</p>
-      <p class="hero-desc">
+      <p class="hero-subtitle reveal-item" style="--delay:0.5s">AI/ML Engineer</p>
+      <p class="hero-desc reveal-item" style="--delay:0.6s">
         Building scalable AI systems, LLM-powered applications, and real-time ML pipelines
         that serve millions of users. 5+ years turning research into production.
       </p>
-      <div class="hero-actions">
+      <div class="hero-actions reveal-item" style="--delay:0.7s">
         <a href="#ai-assistant" class="btn btn-primary">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 0 1 10 10 10 10 0 0 1-10 10A10 10 0 0 1 2 12 10 10 0 0 1 12 2z"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
           Talk to My AI Assistant
         </a>
         <a href="/resume" class="btn btn-ghost">Download Resume</a>
       </div>
-      <div class="hero-stats">
+      <div class="hero-stats reveal-item" style="--delay:0.85s">
         <div class="stat">
           <span class="stat-num">5+</span>
           <span class="stat-label">Years Exp.</span>
@@ -81,6 +98,18 @@
         </div>
       </div>
     </div>
+
+    <!-- Live Coding Terminal -->
+    <div class="code-terminal reveal-item" style="--delay:1s" id="code-terminal">
+      <div class="terminal-header">
+        <div class="terminal-dots">
+          <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+        </div>
+        <span class="terminal-title">siraj_ml_pipeline.py</span>
+      </div>
+      <pre class="terminal-body"><code id="terminal-code"></code></pre>
+    </div>
+
     <div class="scroll-indicator">
       <div class="scroll-arrow"></div>
     </div>
@@ -109,21 +138,21 @@
           </p>
         </div>
         <div class="about-highlights">
-          <div class="highlight-card">
+          <div class="highlight-card" data-animate>
             <div class="highlight-icon">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
             </div>
             <h3>LLM Systems</h3>
             <p>RAG pipelines, fine-tuning (LoRA/PEFT), multi-agent architectures with LangChain</p>
           </div>
-          <div class="highlight-card">
+          <div class="highlight-card" data-animate>
             <div class="highlight-icon">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
             </div>
             <h3>MLOps</h3>
             <p>Production ML with Docker, Kubernetes, MLflow, CI/CD, A/B testing at scale</p>
           </div>
-          <div class="highlight-card">
+          <div class="highlight-card" data-animate>
             <div class="highlight-icon">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
             </div>
@@ -140,7 +169,6 @@
     <div class="container">
       <h2 class="section-title">Experience</h2>
       <div class="timeline">
-        <!-- Perplexity AI -->
         <div class="timeline-item" data-animate>
           <div class="timeline-marker">
             <div class="timeline-dot active"></div>
@@ -173,8 +201,6 @@
             </div>
           </div>
         </div>
-
-        <!-- Accenture -->
         <div class="timeline-item" data-animate>
           <div class="timeline-marker">
             <div class="timeline-dot"></div>
@@ -214,9 +240,7 @@
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
             <h3>Programming</h3>
           </div>
-          <div class="skill-tags">
-            <span>Python</span><span>SQL</span>
-          </div>
+          <div class="skill-tags"><span>Python</span><span>SQL</span></div>
         </div>
         <div class="skill-category" data-animate>
           <div class="skill-cat-header">
@@ -224,16 +248,11 @@
             <h3>GenAI & LLMs</h3>
           </div>
           <div class="skill-tags">
-            <span class="skill-hot">Prompt Engineering</span>
-            <span class="skill-hot">RAG</span>
-            <span class="skill-hot">LLM Fine-Tuning</span>
-            <span>LoRA / PEFT</span>
-            <span class="skill-hot">Multi-Agent Systems</span>
-            <span>LangChain</span>
-            <span>LlamaIndex</span>
-            <span>Instruction Tuning</span>
-            <span>Embedding Models</span>
-            <span>Hallucination Mitigation</span>
+            <span class="skill-hot">Prompt Engineering</span><span class="skill-hot">RAG</span>
+            <span class="skill-hot">LLM Fine-Tuning</span><span>LoRA / PEFT</span>
+            <span class="skill-hot">Multi-Agent Systems</span><span>LangChain</span>
+            <span>LlamaIndex</span><span>Instruction Tuning</span>
+            <span>Embedding Models</span><span>Hallucination Mitigation</span>
           </div>
         </div>
         <div class="skill-category" data-animate>
@@ -346,7 +365,7 @@
       </h2>
       <p class="section-subtitle">
         I'm Siraj's AI assistant — ask me anything about his experience, skills, or availability.
-        I can schedule calls, send follow-ups, and share his resume.
+        I can schedule calls, send follow-ups, and share his resume. You can also use your voice!
       </p>
 
       <div class="chat-container" id="chat-container">
@@ -372,14 +391,21 @@
           <button class="suggestion-btn" data-msg="Can I get Siraj's resume?">Get resume</button>
         </div>
 
+        <!-- Smart follow-up suggestions (injected dynamically) -->
+        <div class="smart-followups" id="smart-followups"></div>
+
         <form class="chat-input-form" id="chat-form">
           <div class="chat-input-wrap">
             <textarea id="chat-input" placeholder="Ask about Siraj's experience, schedule a call, or request his resume..." rows="1"></textarea>
+            <button type="button" class="voice-btn" id="voice-btn" aria-label="Voice input">
+              <svg class="mic-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="1" width="6" height="11" rx="3"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="23" x2="12" y2="19"/></svg>
+              <div class="voice-pulse" id="voice-pulse"></div>
+            </button>
             <button type="submit" class="chat-send-btn" id="chat-send">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
             </button>
           </div>
-          <p class="chat-disclaimer">Powered by Claude AI. Responses may take a moment.</p>
+          <p class="chat-disclaimer">Powered by Claude AI. Click the mic to use your voice.</p>
         </form>
       </div>
     </div>
@@ -405,6 +431,8 @@
     </div>
   </footer>
 
+  <!-- Three.js from CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
