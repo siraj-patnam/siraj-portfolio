@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c \":*)",
+      "Bash(python -c \":*)",
+      "Bash(python -c \"from pypdf import PdfReader; r = PdfReader\\(''C:/Users/siraj/Downloads/Siraj_AIML_Resume.pdf''\\); [print\\(p.extract_text\\(\\)\\) for p in r.pages]\")",
+      "Bash(\"C:/Program Files/Python312/python.exe\" -c \":*)",
+      "Bash(node -e \":*)"
+    ]
+  }
+}

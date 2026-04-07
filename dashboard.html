@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — Siraj Patnam Portfolio</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --accent: #20b8cd;
+      --accent-dim: rgba(32, 184, 205, 0.12);
+      --bg: #0a0a0f;
+      --bg2: #0e0e16;
+      --card: rgba(18, 18, 28, 0.7);
+      --border: rgba(255,255,255,0.06);
+      --text: #e8e8ed;
+      --text2: #8b8b9e;
+      --text3: #5a5a72;
+      --green: #22c55e;
+      --red: #ef4444;
+      --font: 'Inter', sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:var(--font); background:var(--bg); color:var(--text); min-height:100vh; }
+    .login-wrap {
+      display:flex; align-items:center; justify-content:center;
+      min-height:100vh; padding:24px;
+    }
+    .login-card {
+      background:var(--card); border:1px solid var(--border);
+      border-radius:16px; padding:40px; max-width:380px; width:100%;
+      backdrop-filter:blur(10px);
+    }
+    .login-card h1 {
+      font-size:1.3rem; margin-bottom:8px;
+    }
+    .login-card p { color:var(--text2); font-size:0.85rem; margin-bottom:24px; }
+    .login-card input {
+      width:100%; padding:12px 16px; border-radius:10px;
+      background:rgba(255,255,255,0.04); border:1px solid var(--border);
+      color:var(--text); font-family:var(--mono); font-size:0.9rem;
+      outline:none; margin-bottom:16px;
+    }
+    .login-card input:focus { border-color:var(--accent); }
+    .login-card button {
+      width:100%; padding:12px; border-radius:10px; border:none;
+      background:linear-gradient(135deg, var(--accent), #1a8a9a);
+      color:white; font-weight:600; cursor:pointer; font-size:0.9rem;
+    }
+    .login-card button:hover { opacity:0.9; }
+    .login-error { color:var(--red); font-size:0.8rem; margin-top:8px; display:none; }
+
+    /* Dashboard */
+    .dashboard { display:none; padding:24px; max-width:1200px; margin:0 auto; }
+    .dash-header {
+      display:flex; justify-content:space-between; align-items:center;
+      margin-bottom:32px; flex-wrap:wrap; gap:16px;
+    }
+    .dash-header h1 { font-size:1.5rem; }
+    .dash-logout {
+      background:none; border:1px solid var(--border); color:var(--text2);
+      padding:8px 16px; border-radius:8px; cursor:pointer; font-size:0.82rem;
+    }
+    .dash-logout:hover { border-color:var(--red); color:var(--red); }
+
+    .stats-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:16px; margin-bottom:32px; }
+    .stat-card {
+      background:var(--card); border:1px solid var(--border);
+      border-radius:12px; padding:20px; backdrop-filter:blur(10px);
+    }
+    .stat-card .stat-val { font-size:2rem; font-weight:800; color:var(--accent); }
+    .stat-card .stat-lbl { font-size:0.78rem; color:var(--text2); margin-top:4px; text-transform:uppercase; letter-spacing:0.08em; }
+
+    .tab-bar { display:flex; gap:4px; margin-bottom:24px; border-bottom:1px solid var(--border); }
+    .tab-btn {
+      background:none; border:none; padding:12px 20px; color:var(--text2);
+      cursor:pointer; font-weight:500; font-size:0.88rem;
+      border-bottom:2px solid transparent; transition:all 0.2s;
+    }
+    .tab-btn.active { color:var(--accent); border-bottom-color:var(--accent); }
+    .tab-btn:hover { color:var(--text); }
+
+    .tab-content { display:none; }
+    .tab-content.active { display:block; }
+
+    table {
+      width:100%; border-collapse:collapse; font-size:0.85rem;
+    }
+    th {
+      text-align:left; padding:12px 16px; border-bottom:1px solid var(--border);
+      color:var(--text3); font-weight:600; font-size:0.75rem;
+      text-transform:uppercase; letter-spacing:0.06em;
+    }
+    td {
+      padding:12px 16px; border-bottom:1px solid var(--border); color:var(--text2);
+    }
+    tr:hover td { color:var(--text); background:rgba(255,255,255,0.02); }
+    .badge {
+      display:inline-block; padding:3px 8px; border-radius:4px; font-size:0.72rem; font-weight:600;
+    }
+    .badge-confirmed { background:rgba(34,197,94,0.12); color:var(--green); }
+    .badge-cancelled { background:rgba(239,68,68,0.12); color:var(--red); }
+
+    .empty-state { text-align:center; padding:48px; color:var(--text3); }
+    .empty-state p { font-size:0.95rem; }
+
+    @media (max-width:768px) {
+      .stats-grid { grid-template-columns:1fr 1fr; }
+      table { font-size:0.78rem; }
+      th, td { padding:8px 10px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Login -->
+  <div class="login-wrap" id="login-wrap">
+    <div class="login-card">
+      <h1>Dashboard Login</h1>
+      <p>Enter your dashboard password to view leads, meetings, and conversations.</p>
+      <form id="login-form">
+        <input type="password" id="pw-input" placeholder="Password" autocomplete="current-password">
+        <button type="submit">Sign In</button>
+        <div class="login-error" id="login-error">Incorrect password.</div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Dashboard -->
+  <div class="dashboard" id="dashboard">
+    <div class="dash-header">
+      <h1>Portfolio Dashboard</h1>
+      <button class="dash-logout" id="logout-btn">Logout</button>
+    </div>
+
+    <div class="stats-grid" id="stats-grid"></div>
+
+    <div class="tab-bar">
+      <button class="tab-btn active" data-tab="leads">Leads</button>
+      <button class="tab-btn" data-tab="meetings">Meetings</button>
+      <button class="tab-btn" data-tab="conversations">Conversations</button>
+    </div>
+
+    <div class="tab-content active" id="tab-leads">
+      <table><thead><tr>
+        <th>Name</th><th>Email</th><th>Company</th><th>Role</th><th>Date</th>
+      </tr></thead><tbody id="leads-body"></tbody></table>
+    </div>
+
+    <div class="tab-content" id="tab-meetings">
+      <table><thead><tr>
+        <th>Date</th><th>Time</th><th>With</th><th>Topic</th><th>Status</th>
+      </tr></thead><tbody id="meetings-body"></tbody></table>
+    </div>
+
+    <div class="tab-content" id="tab-conversations">
+      <table><thead><tr>
+        <th>Session</th><th>Messages</th><th>Last Active</th>
+      </tr></thead><tbody id="convos-body"></tbody></table>
+    </div>
+  </div>
+
+  <script>
+    let password = '';
+
+    document.getElementById('login-form').addEventListener('submit', async e => {
+      e.preventDefault();
+      password = document.getElementById('pw-input').value;
+      try {
+        const res = await fetch('/api/dashboard/stats?pw=' + encodeURIComponent(password));
+        if (!res.ok) throw new Error();
+        document.getElementById('login-wrap').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'block';
+        loadDashboard();
+      } catch {
+        document.getElementById('login-error').style.display = 'block';
+      }
+    });
+
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      password = '';
+      document.getElementById('dashboard').style.display = 'none';
+      document.getElementById('login-wrap').style.display = 'flex';
+      document.getElementById('pw-input').value = '';
+      document.getElementById('login-error').style.display = 'none';
+    });
+
+    // Tabs
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    async function fetchDash(endpoint) {
+      const res = await fetch(`/api/dashboard/${endpoint}?pw=` + encodeURIComponent(password));
+      return res.json();
+    }
+
+    async function loadDashboard() {
+      const [stats, leads, meetings, convos] = await Promise.all([
+        fetchDash('stats'), fetchDash('leads'), fetchDash('meetings'), fetchDash('conversations'),
+      ]);
+
+      // Stats
+      document.getElementById('stats-grid').innerHTML = `
+        <div class="stat-card"><div class="stat-val">${stats.totalLeads}</div><div class="stat-lbl">Total Leads</div></div>
+        <div class="stat-card"><div class="stat-val">${stats.totalMeetings}</div><div class="stat-lbl">Meetings Booked</div></div>
+        <div class="stat-card"><div class="stat-val">${stats.upcomingMeetings}</div><div class="stat-lbl">Upcoming</div></div>
+        <div class="stat-card"><div class="stat-val">${stats.totalConversations}</div><div class="stat-lbl">Conversations</div></div>
+      `;
+
+      // Leads
+      const leadsBody = document.getElementById('leads-body');
+      if (leads.length === 0) {
+        leadsBody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:32px;">No leads yet. Your AI assistant will collect them automatically.</td></tr>';
+      } else {
+        leadsBody.innerHTML = leads.map(l => `<tr>
+          <td style="color:var(--text);font-weight:500;">${l.name || '—'}</td>
+          <td>${l.email || '—'}</td>
+          <td>${l.company || '—'}</td>
+          <td>${l.role || '—'}</td>
+          <td>${l.createdAt ? new Date(l.createdAt).toLocaleDateString() : '—'}</td>
+        </tr>`).join('');
+      }
+
+      // Meetings
+      const meetBody = document.getElementById('meetings-body');
+      if (meetings.length === 0) {
+        meetBody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:32px;">No meetings scheduled yet.</td></tr>';
+      } else {
+        meetBody.innerHTML = meetings.map(m => `<tr>
+          <td style="color:var(--text);font-weight:500;">${m.date}</td>
+          <td>${m.time}</td>
+          <td>${m.recruiterName}${m.recruiterEmail ? ' (' + m.recruiterEmail + ')' : ''}</td>
+          <td>${m.topic || '—'}</td>
+          <td><span class="badge badge-${m.status}">${m.status}</span></td>
+        </tr>`).join('');
+      }
+
+      // Conversations
+      const convoBody = document.getElementById('convos-body');
+      if (convos.length === 0) {
+        convoBody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--text3);padding:32px;">No conversations recorded yet.</td></tr>';
+      } else {
+        convoBody.innerHTML = convos.map(c => `<tr>
+          <td style="font-family:var(--mono);font-size:0.75rem;color:var(--text3);">${c.sessionId ? c.sessionId.slice(0, 20) + '...' : '—'}</td>
+          <td>${c.messages ? c.messages.length : 0}</td>
+          <td>${c.updatedAt ? new Date(c.updatedAt).toLocaleString() : '—'}</td>
+        </tr>`).join('');
+      }
+    }
+  </script>
+</body>
+</html>
