@@ -6,7 +6,36 @@ const Anthropic = require('@anthropic-ai/sdk');
 const nodemailer = require('nodemailer');
 const path = require('path');
 const fs = require('fs');
-const secrets = require('./secrets');
+
+// Load secrets from secrets.js (local) or environment variables (deployed)
+let secrets;
+try { secrets = require('./secrets'); } catch {
+  secrets = {
+    ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
+    EMAIL_HOST: process.env.EMAIL_HOST || 'smtp.gmail.com',
+    EMAIL_PORT: parseInt(process.env.EMAIL_PORT || '587'),
+    EMAIL_USER: process.env.EMAIL_USER,
+    EMAIL_PASS: process.env.EMAIL_PASS,
+    OWNER_NAME: process.env.OWNER_NAME || 'Siraj Patnam',
+    OWNER_EMAIL: process.env.OWNER_EMAIL,
+    OWNER_PHONE: process.env.OWNER_PHONE || '+1 (314) 393-9371',
+    OWNER_LINKEDIN: process.env.OWNER_LINKEDIN,
+    OWNER_TIMEZONE: process.env.OWNER_TIMEZONE || 'America/Los_Angeles',
+    AVAILABILITY: {
+      timezone: process.env.OWNER_TIMEZONE || 'America/Los_Angeles',
+      slotMinutes: 30,
+      days: {
+        monday: ['10:00-12:00', '14:00-17:00'],
+        tuesday: ['10:00-12:00', '14:00-17:00'],
+        wednesday: ['10:00-12:00', '14:00-17:00'],
+        thursday: ['10:00-12:00', '14:00-17:00'],
+        friday: ['10:00-12:00', '15:00-17:00'],
+      },
+    },
+    DASHBOARD_PASSWORD: process.env.DASHBOARD_PASSWORD || 'admin',
+    PORT: parseInt(process.env.PORT || '3000'),
+  };
+}
 
 // ── Express Setup ────────────────────────────────────────────────────────────
 const app = express();
