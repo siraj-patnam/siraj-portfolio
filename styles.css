@@ -608,10 +608,152 @@ a:hover { color: var(--accent-light); }
 
 /* ── Animations ────────────────────────────────────────────────── */
 [data-animate] {
-  opacity: 0; transform: translateY(20px);
-  transition: opacity 0.6s ease, transform 0.6s ease;
+  opacity: 0; transform: translateY(30px);
+  transition: opacity 0.7s ease, transform 0.7s ease, box-shadow 0.9s ease;
+  position: relative;
 }
-[data-animate].visible { opacity: 1; transform: translateY(0); }
+[data-animate].visible {
+  opacity: 1; transform: translateY(0);
+  animation: glowTrace 2.5s ease-out forwards;
+}
+
+@keyframes glowTrace {
+  0% {
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0),
+      0 0 0px rgba(255,255,255,0),
+      inset 0 0 0px rgba(255,255,255,0);
+  }
+  25% {
+    box-shadow:
+      0 0 0 1.5px rgba(255,255,255,0.45),
+      0 0 35px rgba(255,255,255,0.2),
+      0 0 60px rgba(32,184,205,0.15),
+      inset 0 0 20px rgba(255,255,255,0.06);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.3),
+      0 0 45px rgba(32,184,205,0.2),
+      0 0 80px rgba(32,184,205,0.08),
+      inset 0 0 15px rgba(255,255,255,0.04);
+  }
+  100% {
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.06),
+      0 0 0px rgba(255,255,255,0),
+      0 0 0px rgba(32,184,205,0),
+      inset 0 0 0px rgba(255,255,255,0);
+  }
+}
+
+/* Animated border trace using pseudo-element */
+[data-animate]::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0%,
+    transparent 100%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+[data-animate].visible::before {
+  opacity: 1;
+  background: conic-gradient(
+    from var(--glow-angle, 0deg),
+    transparent 0%,
+    rgba(255,255,255,0.8) 8%,
+    rgba(32,184,205,0.6) 18%,
+    rgba(167,139,250,0.3) 28%,
+    transparent 42%,
+    transparent 100%
+  );
+  animation: rotateBorderGlow 2.5s ease-out forwards;
+}
+
+@keyframes rotateBorderGlow {
+  0% { --glow-angle: 0deg; opacity: 0; }
+  8% { opacity: 1; }
+  75% { opacity: 0.8; }
+  100% { --glow-angle: 360deg; opacity: 0; }
+}
+
+@property --glow-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+/* ── Cyberpunk Click Particles ────────────────────────────────── */
+.cyber-particle {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9998;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  opacity: 0;
+  text-shadow: 0 0 8px currentColor, 0 0 16px currentColor;
+  transform: translate(-50%, -50%);
+}
+
+@keyframes cyberBurst {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) translate(0, 0) scale(0.5);
+    filter: blur(1px) brightness(2);
+  }
+  15% {
+    opacity: 1;
+    filter: blur(0) brightness(1.5);
+  }
+  40% {
+    opacity: 0.9;
+    transform: translate(-50%, -50%) translate(var(--tx), var(--ty)) scale(1);
+    filter: blur(0) brightness(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) translate(calc(var(--tx) * 1.2), calc(var(--ty) * 1.2)) scale(0.6);
+    filter: blur(2px) brightness(0.5);
+  }
+}
+
+.cyber-ring {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9997;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(32,184,205,0.6);
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 10px rgba(32,184,205,0.3), inset 0 0 10px rgba(32,184,205,0.1);
+  animation: cyberRing 0.6s ease-out forwards;
+}
+
+@keyframes cyberRing {
+  0% {
+    width: 10px; height: 10px;
+    opacity: 0.8;
+    border-color: rgba(32,184,205,0.6);
+  }
+  100% {
+    width: 120px; height: 120px;
+    opacity: 0;
+    border-color: rgba(167,139,250,0.2);
+  }
+}
 
 /* ── Responsive ────────────────────────────────────────────────── */
 @media (max-width: 768px) {

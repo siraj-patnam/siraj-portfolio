@@ -533,3 +533,57 @@
       .replace(/<p><\/p>/g, '');
   }
 })();
+
+// ── Cyberpunk Click Particles ────────────────────────────────────
+(function initClickParticles() {
+  const hexChars = '0123456789ABCDEF';
+  const glyphs = ['>', '//', '{}', '[]', '0x', '&&', '|>', '=>', '::','$$', '%%', '<<', '>>'];
+
+  document.addEventListener('click', e => {
+    if (e.target.closest('a, button, input, textarea, .chat-container')) return;
+
+    // Spawn glitch text particles
+    const count = 5 + Math.floor(Math.random() * 4);
+    for (let i = 0; i < count; i++) {
+      const el = document.createElement('span');
+      const type = Math.random();
+
+      if (type < 0.4) {
+        // Hex code fragment
+        el.textContent = '0x' + Array.from({length: 2 + Math.floor(Math.random() * 3)}, () => hexChars[Math.floor(Math.random() * 16)]).join('');
+      } else if (type < 0.7) {
+        // Glyph
+        el.textContent = glyphs[Math.floor(Math.random() * glyphs.length)];
+      } else {
+        // Binary fragment
+        el.textContent = Array.from({length: 4 + Math.floor(Math.random() * 5)}, () => Math.random() > 0.5 ? '1' : '0').join('');
+      }
+
+      el.className = 'cyber-particle';
+      const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.6;
+      const dist = 50 + Math.random() * 90;
+      const tx = Math.cos(angle) * dist;
+      const ty = Math.sin(angle) * dist - 20;
+      const duration = 0.7 + Math.random() * 0.5;
+      const delay = Math.random() * 0.1;
+      const color = Math.random() > 0.5 ? 'rgba(32,184,205,0.9)' : 'rgba(167,139,250,0.9)';
+
+      el.style.cssText = `
+        left:${e.clientX}px; top:${e.clientY}px;
+        color:${color};
+        --tx:${tx}px; --ty:${ty}px;
+        animation: cyberBurst ${duration}s ease-out ${delay}s forwards;
+      `;
+
+      document.body.appendChild(el);
+      el.addEventListener('animationend', () => el.remove());
+    }
+
+    // Electric ring flash
+    const ring = document.createElement('div');
+    ring.className = 'cyber-ring';
+    ring.style.cssText = `left:${e.clientX}px; top:${e.clientY}px;`;
+    document.body.appendChild(ring);
+    ring.addEventListener('animationend', () => ring.remove());
+  });
+})();
