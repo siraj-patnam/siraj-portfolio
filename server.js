@@ -524,10 +524,22 @@ app.get('/api/dashboard/stats', authDashboard, (req, res) => {
   });
 });
 
+// ── Health Check ───────────────────────────────────────────────────────────
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', gemini: !!genAI, timestamp: new Date().toISOString() });
+});
+
+// ── Global Error Handler ──────────────────────────────────────────────────
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err.message);
+  res.status(500).json({ error: 'Internal server error' });
+});
+
 // ── Start Server ────────────────────────────────────────────────────────────
-const PORT = secrets.PORT || 3000;
+const PORT = process.env.PORT || secrets.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`\n  Portfolio running  →  http://localhost:${PORT}`);
   console.log(`  Dashboard         →  http://localhost:${PORT}/dashboard.html`);
-  console.log(`\n  Add your Gemini API key to secrets.js to enable the AI assistant.\n`);
+  console.log(`  Gemini AI         →  ${genAI ? 'configured' : 'NOT configured — set GEMINI_API_KEY'}`);
+  console.log('');
 });
