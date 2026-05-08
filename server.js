@@ -2,7 +2,7 @@
 
 const express = require('express');
 const cors = require('cors');
-const Anthropic = require('@anthropic-ai/sdk');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 const nodemailer = require('nodemailer');
 const path = require('path');
 const fs = require('fs');
@@ -11,7 +11,7 @@ const fs = require('fs');
 let secrets;
 try { secrets = require('./secrets'); } catch {
   secrets = {
-    ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
+    GEMINI_API_KEY: process.env.GEMINI_API_KEY,
     EMAIL_HOST: process.env.EMAIL_HOST || 'smtp.gmail.com',
     EMAIL_PORT: parseInt(process.env.EMAIL_PORT || '587'),
     EMAIL_USER: process.env.EMAIL_USER,
@@ -43,7 +43,7 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname)));
 
-const client = new Anthropic({ apiKey: secrets.ANTHROPIC_API_KEY });
+const genAI = new GoogleGenerativeAI(secrets.GEMINI_API_KEY);
 const DATA_DIR = path.join(__dirname, 'data');
 fs.mkdirSync(DATA_DIR, { recursive: true });
 
@@ -103,12 +103,12 @@ CERTIFICATIONS:
 EDUCATION: M.S. Computer Information Systems, Saint Louis University, USA
 `;
 
-// ── Agent Tools Definition ──────────────────────────────────────────────────
-const TOOLS = [
+// ── Gemini Tool Declarations (function calling) ────────────────────────────
+const TOOL_DECLARATIONS = [
   {
     name: 'save_recruiter_info',
-    description: 'Save or update recruiter/visitor contact details. Call this whenever someone shares their name, email, company, or the role they are hiring for. You can call this multiple times as you learn more details.',
-    input_schema: {
+    description: 'Save or update recruiter/visitor contact details. Call this whenever someone shares their name, email, company, or the role they are hiring for.',
+    parameters: {
       type: 'object',
       properties: {
         name:    { type: 'string', description: 'Full name' },
@@ -123,8 +123,8 @@ const TOOLS = [
   },
   {
     name: 'check_availability',
-    description: "Check Siraj's calendar for available meeting slots. Call this when someone wants to schedule a call or asks about availability. Returns open time slots.",
-    input_schema: {
+    description: "Check Siraj's calendar for available meeting slots. Call this when someone wants to schedule a call or asks about availability.",
+    parameters: {
       type: 'object',
       properties: {
         preferred_date: { type: 'string', description: 'Preferred date in YYYY-MM-DD format. Leave empty to see the next 5 business days.' },
@@ -133,8 +133,8 @@ const TOOLS = [
   },
   {
     name: 'schedule_meeting',
-    description: 'Book a meeting/call with Siraj. Use after the visitor has chosen a time slot. Automatically sends a confirmation email if email is configured.',
-    input_schema: {
+    description: 'Book a meeting/call with Siraj. Use after the visitor has chosen a time slot.',
+    parameters: {
       type: 'object',
       properties: {
         date:             { type: 'string', description: 'Date in YYYY-MM-DD format' },
@@ -149,8 +149,8 @@ const TOOLS = [
   },
   {
     name: 'send_email',
-    description: 'Send an email on behalf of Siraj. Use for follow-ups, sharing information, or custom messages. Supports HTML formatting.',
-    input_schema: {
+    description: 'Send an email on behalf of Siraj. Use for follow-ups, sharing information, or custom messages.',
+    parameters: {
       type: 'object',
       properties: {
         to:      { type: 'string', description: 'Recipient email' },
@@ -163,7 +163,7 @@ const TOOLS = [
   {
     name: 'get_resume_link',
     description: "Provide a download link for Siraj's resume. Use when someone asks for his resume or CV.",
-    input_schema: {
+    parameters: {
       type: 'object',
       properties: {},
     },
@@ -214,7 +214,6 @@ function checkAvailability(input) {
   const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
   const slots = [];
 
-  // Generate slots for next 5 business days (or specific date)
   const startDate = input.preferred_date ? new Date(input.preferred_date + 'T00:00:00') : new Date();
   const daysToCheck = input.preferred_date ? 1 : 7;
 
@@ -279,7 +278,6 @@ function scheduleMeeting(input) {
   meetings.push(meeting);
   saveJSON('meetings.json', meetings);
 
-  // Send confirmation email if email is configured and recruiter email provided
   if (input.recruiter_email && secrets.EMAIL_USER && secrets.EMAIL_USER !== 'your-email@gmail.com') {
     const tz = secrets.OWNER_TIMEZONE || 'America/Los_Angeles';
     sendEmailTool({
@@ -301,7 +299,6 @@ function scheduleMeeting(input) {
         </div>`,
     }).catch(() => {});
 
-    // Also notify Siraj
     sendEmailTool({
       to: secrets.OWNER_EMAIL,
       subject: `New Meeting Booked: ${input.recruiter_name}${input.recruiter_email ? ' (' + input.recruiter_email + ')' : ''}`,
@@ -392,54 +389,80 @@ app.post('/api/chat', async (req, res) => {
   res.flushHeaders();
 
   try {
-    let apiMessages = messages.map(m => ({ role: m.role, content: m.content }));
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-2.0-flash',
+      systemInstruction: SYSTEM_PROMPT,
+      tools: [{ functionDeclarations: TOOL_DECLARATIONS }],
+    });
+
+    // Convert messages to Gemini format
+    const geminiHistory = [];
+    for (const msg of messages.slice(0, -1)) {
+      geminiHistory.push({
+        role: msg.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: msg.content }],
+      });
+    }
+
+    const chat = model.startChat({ history: geminiHistory });
+    const lastMessage = messages[messages.length - 1].content;
+
     let iterations = 0;
+    let currentInput = lastMessage;
 
     while (iterations < 6) {
       iterations++;
 
-      const response = await client.messages.create({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1024,
-        system: SYSTEM_PROMPT,
-        tools: TOOLS,
-        messages: apiMessages,
-      });
+      const result = await chat.sendMessage(currentInput);
+      const response = result.response;
+      const parts = response.candidates?.[0]?.content?.parts || [];
 
-      const toolUseBlocks = response.content.filter(b => b.type === 'tool_use');
-      const textBlocks = response.content.filter(b => b.type === 'text');
+      // Extract text and function calls
+      let textContent = '';
+      const functionCalls = [];
 
-      // Stream any text
-      for (const block of textBlocks) {
-        if (block.text.trim()) {
-          res.write(`data: ${JSON.stringify({ type: 'text', content: block.text })}\n\n`);
+      for (const part of parts) {
+        if (part.text) {
+          textContent += part.text;
+        }
+        if (part.functionCall) {
+          functionCalls.push(part.functionCall);
         }
       }
 
-      // If no tool calls, we're done
-      if (toolUseBlocks.length === 0 || response.stop_reason === 'end_turn') break;
+      // Stream any text
+      if (textContent.trim()) {
+        res.write(`data: ${JSON.stringify({ type: 'text', content: textContent })}\n\n`);
+      }
 
-      // Execute tools
-      const toolResults = [];
-      for (const toolUse of toolUseBlocks) {
+      // If no function calls, we're done
+      if (functionCalls.length === 0) break;
+
+      // Execute tools and collect responses
+      const functionResponses = [];
+      for (const fc of functionCalls) {
         const toolLabel = {
           save_recruiter_info: 'Saving contact details',
           check_availability: 'Checking calendar',
           schedule_meeting: 'Booking meeting',
           send_email: 'Sending email',
           get_resume_link: 'Preparing resume',
-        }[toolUse.name] || toolUse.name;
+        }[fc.name] || fc.name;
 
-        res.write(`data: ${JSON.stringify({ type: 'tool_start', tool: toolUse.name, label: toolLabel })}\n\n`);
-        const result = await executeTool(toolUse.name, toolUse.input);
-        res.write(`data: ${JSON.stringify({ type: 'tool_done', tool: toolUse.name, label: toolLabel, success: result.success !== false })}\n\n`);
+        res.write(`data: ${JSON.stringify({ type: 'tool_start', tool: fc.name, label: toolLabel })}\n\n`);
+        const toolResult = await executeTool(fc.name, fc.args || {});
+        res.write(`data: ${JSON.stringify({ type: 'tool_done', tool: fc.name, label: toolLabel, success: toolResult.success !== false })}\n\n`);
 
-        toolResults.push({ type: 'tool_result', tool_use_id: toolUse.id, content: JSON.stringify(result) });
+        functionResponses.push({
+          functionResponse: {
+            name: fc.name,
+            response: toolResult,
+          },
+        });
       }
 
-      // Continue conversation with tool results
-      apiMessages.push({ role: 'assistant', content: response.content });
-      apiMessages.push({ role: 'user', content: toolResults });
+      // Send tool results back to Gemini for next iteration
+      currentInput = functionResponses;
     }
 
     // Save conversation
@@ -455,7 +478,7 @@ app.post('/api/chat', async (req, res) => {
     res.end();
   } catch (err) {
     console.error('Chat error:', err.message);
-    res.write(`data: ${JSON.stringify({ type: 'error', content: 'AI service unavailable. Please ensure the Anthropic API key is set in secrets.js.' })}\n\n`);
+    res.write(`data: ${JSON.stringify({ type: 'error', content: 'AI service unavailable. Please ensure the Gemini API key is set.' })}\n\n`);
     res.end();
   }
 });
@@ -503,5 +526,5 @@ const PORT = secrets.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`\n  Portfolio running  →  http://localhost:${PORT}`);
   console.log(`  Dashboard         →  http://localhost:${PORT}/dashboard.html`);
-  console.log(`\n  Add your Anthropic API key to secrets.js to enable the AI assistant.\n`);
+  console.log(`\n  Add your Gemini API key to secrets.js to enable the AI assistant.\n`);
 });

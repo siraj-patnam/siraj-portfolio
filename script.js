@@ -410,7 +410,7 @@
       }
     } catch (err) {
       typingEl.remove();
-      appendMessage('assistant', 'Sorry, I\'m having trouble connecting. Please make sure the server is running and the Anthropic API key is configured in `secrets.js`.');
+      appendMessage('assistant', 'Sorry, I\'m having trouble connecting. Please make sure the server is running and the Gemini API key is configured in `secrets.js`.');
     }
 
     isStreaming = false;
