@@ -11,7 +11,7 @@ const fs = require('fs');
 let secrets;
 try { secrets = require('./secrets'); } catch {
   secrets = {
-    GEMINI_API_KEY: process.env.GEMINI_API_KEY,
+    GEMINI_API_KEY: process.env.GEMINI_API_KEY || '',
     EMAIL_HOST: process.env.EMAIL_HOST || 'smtp.gmail.com',
     EMAIL_PORT: parseInt(process.env.EMAIL_PORT || '587'),
     EMAIL_USER: process.env.EMAIL_USER,
@@ -36,6 +36,17 @@ try { secrets = require('./secrets'); } catch {
     PORT: parseInt(process.env.PORT || '3000'),
   };
 }
+
+// Environment variables ALWAYS override secrets.js (for deployed environments)
+if (process.env.GEMINI_API_KEY) secrets.GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+if (process.env.EMAIL_USER) secrets.EMAIL_USER = process.env.EMAIL_USER;
+if (process.env.EMAIL_PASS) secrets.EMAIL_PASS = process.env.EMAIL_PASS;
+if (process.env.OWNER_EMAIL) secrets.OWNER_EMAIL = process.env.OWNER_EMAIL;
+if (process.env.OWNER_LINKEDIN) secrets.OWNER_LINKEDIN = process.env.OWNER_LINKEDIN;
+if (process.env.DASHBOARD_PASSWORD) secrets.DASHBOARD_PASSWORD = process.env.DASHBOARD_PASSWORD;
+if (process.env.PORT) secrets.PORT = parseInt(process.env.PORT);
+
+console.log('Config source:', process.env.GEMINI_API_KEY ? 'environment variables' : 'secrets.js');
 
 // ── Express Setup ────────────────────────────────────────────────────────────
 const app = express();
