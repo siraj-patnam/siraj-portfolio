@@ -43,7 +43,7 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname)));
 
-const genAI = new GoogleGenerativeAI(secrets.GEMINI_API_KEY);
+const genAI = secrets.GEMINI_API_KEY ? new GoogleGenerativeAI(secrets.GEMINI_API_KEY) : null;
 const DATA_DIR = path.join(__dirname, 'data');
 fs.mkdirSync(DATA_DIR, { recursive: true });
 
@@ -381,6 +381,9 @@ app.post('/api/chat', async (req, res) => {
   const { messages, sessionId } = req.body;
   if (!messages || !Array.isArray(messages)) {
     return res.status(400).json({ error: 'messages array required' });
+  }
+  if (!genAI) {
+    return res.status(500).json({ error: 'Gemini API key not configured. Set GEMINI_API_KEY environment variable.' });
   }
 
   res.setHeader('Content-Type', 'text/event-stream');
