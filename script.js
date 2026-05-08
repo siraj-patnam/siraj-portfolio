@@ -179,6 +179,40 @@
   });
 })();
 
+// ── Spaceship Chat Widget Toggle ─────────────────────────────────
+(function initShipWidget() {
+  const widget = document.getElementById('ship-widget');
+  const shipBtn = document.getElementById('ship-btn');
+  const closeBtn = document.getElementById('ship-close');
+  if (!widget || !shipBtn) return;
+
+  function toggleChat() {
+    widget.classList.toggle('open');
+    if (widget.classList.contains('open')) {
+      document.getElementById('chat-input')?.focus();
+    }
+  }
+
+  shipBtn.addEventListener('click', toggleChat);
+  closeBtn?.addEventListener('click', toggleChat);
+
+  // Nav/hero CTA triggers
+  document.querySelectorAll('.ship-nav-trigger').forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      if (!widget.classList.contains('open')) toggleChat();
+      // Close mobile menu if open
+      document.getElementById('mobile-btn')?.classList.remove('open');
+      document.getElementById('mobile-menu')?.classList.remove('open');
+    });
+  });
+
+  // Close on Escape
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && widget.classList.contains('open')) toggleChat();
+  });
+})();
+
 // ── Scroll Animations ─────────────────────────────────────────────
 (function initAnimations() {
   const observer = new IntersectionObserver(
