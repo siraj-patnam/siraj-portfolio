@@ -491,8 +491,11 @@ app.post('/api/chat', async (req, res) => {
     res.write('data: [DONE]\n\n');
     res.end();
   } catch (err) {
-    console.error('Chat error:', err.message);
-    res.write(`data: ${JSON.stringify({ type: 'error', content: 'AI service unavailable. Please ensure the Gemini API key is set.' })}\n\n`);
+    console.error('Chat error:', err.message, err.stack);
+    const debugMsg = process.env.NODE_ENV === 'production'
+      ? `AI service error: ${err.message}`
+      : `AI service error: ${err.message}`;
+    res.write(`data: ${JSON.stringify({ type: 'error', content: debugMsg })}\n\n`);
     res.end();
   }
 });
