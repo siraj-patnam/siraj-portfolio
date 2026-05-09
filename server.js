@@ -548,9 +548,10 @@ app.use((err, req, res, next) => {
 
 // ── Start Server ────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || secrets.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`\n  Portfolio running  →  http://localhost:${PORT}`);
-  console.log(`  Dashboard         →  http://localhost:${PORT}/dashboard.html`);
+const HOST = '0.0.0.0';
+app.listen(PORT, HOST, () => {
+  console.log(`\n  Portfolio running  →  http://${HOST}:${PORT}`);
+  console.log(`  Dashboard         →  http://${HOST}:${PORT}/dashboard.html`);
   console.log(`  Gemini AI         →  ${genAI ? 'configured' : 'NOT configured — set GEMINI_API_KEY'}`);
   console.log('');
 });
